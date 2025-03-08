@@ -4,36 +4,38 @@ import time
 from threading import Thread
 
 # Replace the connection string with your own
-connection_string = "mongodb+srv://roshan:roshanpwd@cluster0.tskix.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+connection_string = "mongodb+srv://roshan:roshanpwd@cluster0.uf1x9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 # Arduino setup
 ARDUINO_PORT = 'COM8'  # Replace with your Arduino's port
 LED_PIN = 13  # Pin where the LED is connected
+SERVO_PIN = 10  # Pin where the servo motor is connected
 
 # Initialize Arduino board
 board = pyfirmata.Arduino(ARDUINO_PORT)
 led = board.get_pin(f'd:{LED_PIN}:o')  # Set LED pin as output
+servo = board.get_pin(f'd:{SERVO_PIN}:s')  # Set servo pin as PWM (servo)
 
-# Function to control the LED
-def control_led():
-    # Rapid blinking for 3 seconds
-    end_time = time.time() + 3
-    while time.time() < end_time:
-        led.write(1)  # Turn LED on
-        time.sleep(0.1)  # Rapid blink
-        led.write(0)  # Turn LED off
-        time.sleep(0.1)
+# Function to control the LED and servo (non-blocking)
+def control_led_and_servo():
+    def run_sequence():
+        # Blink the LED and move the servo
+        for _ in range(3):  # Blink LED 3 times
+            led.write(1)  # Turn LED on
+            time.sleep(0.2)  # LED on for 0.2 seconds
+            led.write(0)  # Turn LED off
+            time.sleep(0.2)  # LED off for 0.2 seconds
 
-    # Slow blinking for 4 seconds
-    end_time = time.time() + 4
-    while time.time() < end_time:
-        led.write(1)  # Turn LED on
-        time.sleep(0.5)  # Slow blink
-        led.write(0)  # Turn LED off
-        time.sleep(0.5)
+        # Move servo to 90 degrees
+        servo.write(90)
+        time.sleep(1)  # Wait for 1 second
 
-    # Turn LED off
-    led.write(0)
+        # Move servo back to 0 degrees
+        servo.write(0)
+        time.sleep(1)  # Wait for 1 second
+
+    # Run the sequence in a separate thread to avoid blocking
+    Thread(target=run_sequence, daemon=True).start()
 
 # Function to monitor MongoDB changes
 def monitor_changes(db):
@@ -44,8 +46,8 @@ def monitor_changes(db):
             print("\nChange detected in the database!")
             print("Change details:", change)
 
-            # Invoke the LED control function
-            control_led()
+            # Invoke the LED and servo control function
+            control_led_and_servo()
 
 # Function to fetch data periodically
 def fetch_data_periodically(db):
