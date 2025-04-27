@@ -19,9 +19,9 @@ def move_servo(angle):
 def on_click(x, y, button, pressed):
     if pressed:  # Only trigger on mouse button press (not release)
         print(f"Mouse clicked at ({x}, {y})")
-        move_servo(90)  # Move servo to 90 degrees
+        move_servo(0)  # Move servo to 90 degrees
         time.sleep(1)  # Wait for 1 second
-        move_servo(0)  # Move servo back to 0 degrees
+        move_servo(90)  # Move servo back to 0 degrees
 
 # Start listening for mouse clicks
 print("Listening for mouse clicks... Press Ctrl+C to exit.")
